@@ -1,0 +1,67 @@
+import { NextResponse } from 'next/server';
+import { readAll, writeAll, storageReady, slugify } from '../../../lib/store';
+
+export const dynamic = 'force-dynamic';
+
+export async function POST(req) {
+  try {
+    if (!storageReady()) {
+      return NextResponse.json(
+        { error: 'Storage is not configured yet. Please contact the academy.' },
+        { status: 503 }
+      );
+    }
+    const b = await req.json();
+    const required = [
+      ['name', 'Full Name'], ['batch', 'Batch No'], ['course', 'Course'],
+      ['rollNumber', 'Roll Number'], ['phone', 'Contact Number'], ['email', 'Email'],
+    ];
+    for (const [f, label] of required) {
+      if (!b[f] || !String(b[f]).trim()) {
+        return NextResponse.json({ error: label + ' is required.' }, { status: 400 });
+      }
+    }
+    const slug = slugify(b.rollNumber);
+    if (!slug) {
+      return NextResponse.json({ error: 'Invalid roll number.' }, { status: 400 });
+    }
+    if (b.photo && String(b.photo).length > 400000) {
+      return NextResponse.json({ error: 'Photo is too large. Please choose a smaller image.' }, { status: 400 });
+    }
+    const all = await readAll();
+    if (all.some((s) => s.slug === slug)) {
+      return NextResponse.json(
+        { error: 'A submission with this roll number already exists. Please contact the academy if this is a mistake.' },
+        { status: 409 }
+      );
+    }
+    const item = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+      slug,
+      status: 'pending',
+      submittedAt: new Date().toISOString(),
+      name: String(b.name).trim(),
+      batch: String(b.batch).trim(),
+      course: String(b.course).trim(),
+      rollNumber: String(b.rollNumber).trim(),
+      phone: String(b.phone).trim(),
+      email: String(b.email).trim().toLowerCase(),
+      about: b.about || '',
+      photo: b.photo || '',
+      skills: b.skills || '',
+      softSkills: b.softSkills || '',
+      education: Array.isArray(b.education) ? b.education : [],
+      experience: Array.isArray(b.experience) ? b.experience : [],
+      internships: Array.isArray(b.internships) ? b.internships : [],
+      projects: Array.isArray(b.projects) ? b.projects : [],
+      linkedin: b.linkedin || '',
+      github: b.github || '',
+      website: b.website || '',
+    };
+    all.push(item);
+    await writeAll(all);
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    return NextResponse.json({ error: 'Something went wrong. Please try again.' }, { status: 500 });
+  }
+}
