@@ -62,6 +62,9 @@ export async function POST(req) {
     await writeAll(all);
     return NextResponse.json({ ok: true });
   } catch (e) {
-    return NextResponse.json({ error: 'Something went wrong. Please try again.' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Something went wrong: ' + (e && e.message ? e.message : 'unknown error') },
+      { status: 500 }
+    );
   }
 }
