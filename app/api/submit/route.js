@@ -50,6 +50,8 @@ export async function POST(req) {
       photo: b.photo || '',
       skills: b.skills || '',
       softSkills: b.softSkills || '',
+      skillGroups: Array.isArray(b.skillGroups) ? b.skillGroups : [],
+      address: b.address ? String(b.address).trim() : '',
       education: Array.isArray(b.education) ? b.education : [],
       experience: Array.isArray(b.experience) ? b.experience : [],
       internships: Array.isArray(b.internships) ? b.internships : [],

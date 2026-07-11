@@ -231,8 +231,11 @@ function FragmentRow({ s, openId, setOpenId, decide, busyId, copyLink }) {
           <td colSpan={9}>
             <div className="detail-grid">
               <div><h4>About</h4>{s.about || '—'}</div>
-              <div><h4>Technical skills</h4>{s.skills || '—'}</div>
-              <div><h4>Soft skills</h4>{s.softSkills || '—'}</div>
+              <div><h4>Skills</h4>
+                {(s.skillGroups || []).map((g, i) => <div key={i}><b>{g.category}:</b> {g.items}</div>)}
+                {!(s.skillGroups || []).length && (s.skills || s.softSkills || '—')}
+              </div>
+              <div><h4>Address</h4>{s.address || '—'}</div>
               <div><h4>Education</h4>{(s.education || []).map((e, i) => <div key={i}>{e.degree} — {e.institution} ({e.year}) {e.score}</div>)}{!(s.education || []).length && '—'}</div>
               <div><h4>Experience</h4>{(s.experience || []).map((e, i) => <div key={i}>{e.role} @ {e.company} ({e.duration})</div>)}{!(s.experience || []).length && '—'}</div>
               <div><h4>Internships</h4>{(s.internships || []).map((e, i) => <div key={i}>{e.role} @ {e.company} ({e.duration})</div>)}{!(s.internships || []).length && '—'}</div>

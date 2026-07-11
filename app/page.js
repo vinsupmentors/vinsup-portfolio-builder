@@ -6,6 +6,7 @@ const emptyEdu = { degree: '', institution: '', year: '', score: '' };
 const emptyExp = { role: '', company: '', duration: '', description: '' };
 const emptyInt = { role: '', company: '', duration: '', description: '' };
 const emptyProj = { title: '', tech: '', link: '', description: '' };
+const emptySkill = { category: '', items: '' };
 
 function ListEditor({ items, setItems, empty, fields, addLabel }) {
   const update = (i, key, val) => {
@@ -62,8 +63,8 @@ export default function StudentForm() {
   });
   const [about, setAbout] = useState('');
   const [photo, setPhoto] = useState('');
-  const [skills, setSkills] = useState('');
-  const [softSkills, setSoftSkills] = useState('');
+  const [skillGroups, setSkillGroups] = useState([{ ...emptySkill }]);
+  const [address, setAddress] = useState('');
   const [education, setEducation] = useState([{ ...emptyEdu }]);
   const [experience, setExperience] = useState([]);
   const [internships, setInternships] = useState([]);
@@ -121,7 +122,8 @@ export default function StudentForm() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...basic, about, photo, skills, softSkills,
+          ...basic, about, photo, address,
+          skillGroups: skillGroups.filter((x) => x.category || x.items),
           education: education.filter((x) => x.degree || x.institution),
           experience: experience.filter((x) => x.role || x.company),
           internships: internships.filter((x) => x.role || x.company),
@@ -223,17 +225,12 @@ export default function StudentForm() {
           </div>
 
           <div className="card">
-            <h2>Skills</h2>
-            <div className="field">
-              <label>Technical Skills (separate with commas)</label>
-              <input value={skills} onChange={(e) => setSkills(e.target.value)}
-                placeholder="e.g. HTML, CSS, JavaScript, React, Python" />
-            </div>
-            <div className="field">
-              <label>Soft Skills (separate with commas)</label>
-              <input value={softSkills} onChange={(e) => setSoftSkills(e.target.value)}
-                placeholder="e.g. Communication, Teamwork, Problem Solving" />
-            </div>
+            <h2>Skills <small>— group them by category, e.g. SEO, SMM, Web Development, Soft Skills</small></h2>
+            <ListEditor items={skillGroups} setItems={setSkillGroups} empty={emptySkill} addLabel="Add skill category"
+              fields={[
+                { key: 'category', label: 'Category', ph: 'e.g. SEO / Web Development / Soft Skills' },
+                { key: 'items', label: 'Skills in this category (separate with commas)', ph: 'e.g. WordPress, Google Analytics, Business Listing' },
+              ]} />
           </div>
 
           <div className="card">
@@ -256,6 +253,8 @@ export default function StudentForm() {
                 <input value={links.github} onChange={(e) => setLinks({ ...links, github: e.target.value })} placeholder="https://github.com/..." /></div>
               <div className="field"><label>Website / Other (optional)</label>
                 <input value={links.website} onChange={(e) => setLinks({ ...links, website: e.target.value })} placeholder="https://..." /></div>
+              <div className="field"><label>Address (optional)</label>
+                <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="e.g. Teacher's Colony, Coimbatore 641035" /></div>
             </div>
           </div>
 
@@ -269,7 +268,7 @@ export default function StudentForm() {
       </div>
       <div className="pf-footer">
         <div className="container">
-          <span className="powered">Powered by <span className="vs-mark">Vinsup <span>Skill</span> Academy</span></span>
+          <span className="powered">Powered by <img src="https://clever-pithivier-419872.netlify.app/Untitled_design-removebg-preview.png" alt="Vinsup Skill Academy" style={{ height: 34 }} /></span>
         </div>
       </div>
     </>
