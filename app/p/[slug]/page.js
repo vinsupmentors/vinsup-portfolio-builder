@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import { checkToken } from '../../../lib/auth';
 import { readStudent, storageReady } from '../../../lib/store';
+import ScrollFX from './scrollfx';
 
 export const dynamic = 'force-dynamic';
 
@@ -80,6 +81,7 @@ export default async function Portfolio({ params }) {
 
   return (
     <div className="pf">
+      <ScrollFX />
       {s.status !== 'approved' && isAdmin && (
         <div className="pf-preview-banner">
           Admin preview — this portfolio is {s.status} and not visible to the public yet.
@@ -109,12 +111,17 @@ export default async function Portfolio({ params }) {
           <p className="pf-tagline">{s.course}</p>
           <p className="pf-meta2">Batch {s.batch} &nbsp;•&nbsp; Roll No {s.rollNumber}</p>
         </div>
+        <div className="pf-wave" aria-hidden="true">
+          <svg viewBox="0 0 1440 90" preserveAspectRatio="none">
+            <path d="M0,56 C240,92 480,8 720,36 C960,64 1200,92 1440,44 L1440,90 L0,90 Z" fill="#ffffff" />
+          </svg>
+        </div>
       </header>
 
       {/* About */}
       {s.about && (
         <section className="pf-sec" id="about">
-          <div className="container">
+          <div className="container reveal">
             <h2 className="pf-h2">About Me</h2>
             <div className={'pf-about2' + (s.photo ? ' with-img' : '')}>
               {s.photo && <img src={s.photo} alt={s.name} className="pf-about-img" />}
@@ -127,7 +134,7 @@ export default async function Portfolio({ params }) {
       {/* Experience */}
       {hasTimeline(s.experience) && (
         <section className="pf-sec alt" id="experience">
-          <div className="container">
+          <div className="container reveal">
             <h2 className="pf-h2">Experience</h2>
             <div className="pf-grid">
               {s.experience.map((e, i) => (
@@ -146,7 +153,7 @@ export default async function Portfolio({ params }) {
       {/* Education */}
       {hasTimeline(s.education) && (
         <section className="pf-sec" id="education">
-          <div className="container">
+          <div className="container reveal">
             <h2 className="pf-h2">Education</h2>
             <div className="pf-grid">
               {s.education.map((e, i) => (
@@ -166,7 +173,7 @@ export default async function Portfolio({ params }) {
       {/* Internships */}
       {hasTimeline(s.internships) && (
         <section className="pf-sec alt" id="internships">
-          <div className="container">
+          <div className="container reveal">
             <h2 className="pf-h2">Internships</h2>
             <div className="pf-grid">
               {s.internships.map((e, i) => (
@@ -185,7 +192,7 @@ export default async function Portfolio({ params }) {
       {/* Projects */}
       {hasTimeline(s.projects) && (
         <section className="pf-sec" id="projects">
-          <div className="container">
+          <div className="container reveal">
             <h2 className="pf-h2">My Projects</h2>
             <div className="pf-grid">
               {s.projects.map((p, i) => (
@@ -208,7 +215,7 @@ export default async function Portfolio({ params }) {
       {/* Skills */}
       {groups.length > 0 && (
         <section className="pf-sec alt" id="skills">
-          <div className="container">
+          <div className="container reveal">
             <h2 className="pf-h2">Skills</h2>
             <div className="pf-grid pf-skills-grid">
               {groups.map((g, i) => (
@@ -226,7 +233,7 @@ export default async function Portfolio({ params }) {
 
       {/* Contact */}
       <section className="pf-sec" id="contact">
-        <div className="container pf-contact2">
+        <div className="container pf-contact2 reveal">
           <h2 className="pf-h2">Get In Touch</h2>
           <p className="pf-contact-intro">
             I&apos;m open to opportunities and would love to connect. Find me on these platforms:
