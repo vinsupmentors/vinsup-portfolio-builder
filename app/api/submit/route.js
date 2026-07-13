@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import {
-  storageReady, slugify, studentExists, writeStudent, updateIndex, indexEntry,
+  storageReady, slugify, studentExists, writeStudent, updateIndex, indexEntry, readIndex,
 } from '../../../lib/store';
+
+const RESERVED = new Set(['admin', 'thanks', 'api', 'p', '_next', 'favicon.ico', 'robots.txt']);
 
 export const dynamic = 'force-dynamic';
 
@@ -23,18 +25,24 @@ export async function POST(req) {
         return NextResponse.json({ error: label + ' is required.' }, { status: 400 });
       }
     }
-    const slug = slugify(b.rollNumber);
-    if (!slug) {
-      return NextResponse.json({ error: 'Invalid roll number.' }, { status: 400 });
-    }
     if (b.photo && String(b.photo).length > 400000) {
       return NextResponse.json({ error: 'Photo is too large. Please choose a smaller image.' }, { status: 400 });
     }
-    if (await studentExists(slug)) {
+    // one submission per roll number
+    const roll = String(b.rollNumber).trim().toLowerCase();
+    const idx = await readIndex();
+    if (idx.some((e) => String(e.rollNumber || '').trim().toLowerCase() === roll)) {
       return NextResponse.json(
         { error: 'A submission with this roll number already exists. Please contact the academy if this is a mistake.' },
         { status: 409 }
       );
+    }
+    // clean URL from the student's name, e.g. /venkatesh-prasad-s
+    let base = slugify(b.name) || 'student';
+    if (RESERVED.has(base)) base = base + '-vsa';
+    let slug = base;
+    for (let n = 2; RESERVED.has(slug) || (await studentExists(slug)); n++) {
+      slug = base + '-' + n;
     }
     const student = {
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),

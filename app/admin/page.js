@@ -128,7 +128,7 @@ export default function Admin() {
   }), [subs]);
 
   const copyLink = (slug) => {
-    const url = window.location.origin + '/p/' + slug;
+    const url = window.location.origin + '/' + slug;
     navigator.clipboard.writeText(url);
     alert('Portfolio link copied:\n' + url);
   };
@@ -218,11 +218,11 @@ function FragmentRow({ s, openId, toggleView, detail, decide, busyId, copyLink }
         <td>
           {s.status === 'approved' ? (
             <div className="actions">
-              <a href={'/p/' + s.slug} target="_blank" rel="noreferrer">Open</a>
+              <a href={'/' + s.slug} target="_blank" rel="noreferrer">Open</a>
               <button className="btn btn-sm btn-outline" onClick={() => copyLink(s.slug)}>Copy link</button>
             </div>
           ) : (
-            <a href={'/p/' + s.slug} target="_blank" rel="noreferrer" style={{ color: '#6b7280' }}>Preview</a>
+            <a href={'/' + s.slug} target="_blank" rel="noreferrer" style={{ color: '#6b7280' }}>Preview</a>
           )}
         </td>
         <td>
