@@ -47,6 +47,7 @@ export async function POST(req) {
       rollNumber: String(b.rollNumber).trim(),
       phone: String(b.phone).trim(),
       email: String(b.email).trim().toLowerCase(),
+      tagline: b.tagline ? String(b.tagline).trim() : '',
       about: b.about || '',
       photo: b.photo || '',
       skills: b.skills || '',

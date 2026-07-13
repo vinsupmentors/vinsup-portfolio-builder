@@ -108,8 +108,7 @@ export default async function Portfolio({ params }) {
             <div className="pf-photo2 pf-initials2">{initials}</div>
           )}
           <h1>{s.name}</h1>
-          <p className="pf-tagline">{s.course}</p>
-          <p className="pf-meta2">Batch {s.batch} &nbsp;•&nbsp; Roll No {s.rollNumber}</p>
+          <p className="pf-tagline">{s.tagline || s.course}</p>
         </div>
         <div className="pf-wave" aria-hidden="true">
           <svg viewBox="0 0 1440 90" preserveAspectRatio="none">

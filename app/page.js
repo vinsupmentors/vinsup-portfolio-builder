@@ -59,7 +59,7 @@ export default function StudentForm() {
   const [error, setError] = useState('');
 
   const [basic, setBasic] = useState({
-    name: '', batch: '', course: '', rollNumber: '', phone: '', email: '',
+    name: '', batch: '', course: '', rollNumber: '', phone: '', email: '', tagline: '',
   });
   const [about, setAbout] = useState('');
   const [photo, setPhoto] = useState('');
@@ -99,6 +99,7 @@ export default function StudentForm() {
     for (const [k, label] of [
       ['name', 'Full Name'], ['batch', 'Batch No'], ['course', 'Course'],
       ['rollNumber', 'Roll Number'], ['phone', 'Contact Number'], ['email', 'Email'],
+      ['tagline', 'Your Dream Role'],
     ]) {
       if (!basic[k].trim()) {
         setError(label + ' is required.');
@@ -175,6 +176,11 @@ export default function StudentForm() {
                 <input value={basic.phone} onChange={setB('phone')} placeholder="e.g. 9876543210" /></div>
               <div className="field"><label>Email <span className="req">*</span></label>
                 <input type="email" value={basic.email} onChange={setB('email')} placeholder="e.g. priya@gmail.com" /></div>
+              <div className="field" style={{ gridColumn: '1 / -1' }}>
+                <label>Your Dream Role <span className="req">*</span></label>
+                <input value={basic.tagline} onChange={setB('tagline')}
+                  placeholder="e.g. Aspiring Data Analyst / Aspiring Digital Marketer" />
+              </div>
             </div>
           </div>
 
