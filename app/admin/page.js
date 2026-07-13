@@ -53,6 +53,7 @@ export default function Admin() {
   const [fCourse, setFCourse] = useState('all');
   const [openId, setOpenId] = useState(null);
   const [busyId, setBusyId] = useState(null);
+  const [details, setDetails] = useState({});
 
   const load = async () => {
     const res = await fetch('/api/admin/submissions');
@@ -68,16 +69,31 @@ export default function Admin() {
 
   useEffect(() => { load(); }, []);
 
-  const decide = async (id, action) => {
+  const decide = async (slug, action) => {
     if (action === 'delete' && !confirm('Delete this submission permanently?')) return;
-    setBusyId(id);
+    setBusyId(slug);
     await fetch('/api/admin/decide', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, action }),
+      body: JSON.stringify({ slug, action }),
     });
     setBusyId(null);
     load();
+  };
+
+  const toggleView = async (slug) => {
+    if (openId === slug) {
+      setOpenId(null);
+      return;
+    }
+    setOpenId(slug);
+    if (!details[slug]) {
+      const res = await fetch('/api/admin/student?slug=' + encodeURIComponent(slug));
+      if (res.ok) {
+        const data = await res.json();
+        setDetails((d) => ({ ...d, [slug]: data.student }));
+      }
+    }
   };
 
   const logout = async () => {
@@ -174,8 +190,8 @@ export default function Admin() {
                   </td></tr>
                 )}
                 {filtered.map((s) => (
-                  <FragmentRow key={s.id} s={s} openId={openId} setOpenId={setOpenId}
-                    decide={decide} busyId={busyId} copyLink={copyLink} />
+                  <FragmentRow key={s.slug} s={s} openId={openId} toggleView={toggleView}
+                    detail={details[s.slug]} decide={decide} busyId={busyId} copyLink={copyLink} />
                 ))}
               </tbody>
             </table>
@@ -186,8 +202,9 @@ export default function Admin() {
   );
 }
 
-function FragmentRow({ s, openId, setOpenId, decide, busyId, copyLink }) {
-  const open = openId === s.id;
+function FragmentRow({ s, openId, toggleView, detail, decide, busyId, copyLink }) {
+  const open = openId === s.slug;
+  const d = detail;
   return (
     <>
       <tr>
@@ -210,43 +227,47 @@ function FragmentRow({ s, openId, setOpenId, decide, busyId, copyLink }) {
         </td>
         <td>
           <div className="actions">
-            <button className="btn btn-sm btn-gray" onClick={() => setOpenId(open ? null : s.id)}>
+            <button className="btn btn-sm btn-gray" onClick={() => toggleView(s.slug)}>
               {open ? 'Hide' : 'View'}
             </button>
             {s.status !== 'approved' && (
-              <button className="btn btn-sm btn-green" disabled={busyId === s.id} onClick={() => decide(s.id, 'approved')}>Approve</button>
+              <button className="btn btn-sm btn-green" disabled={busyId === s.slug} onClick={() => decide(s.slug, 'approved')}>Approve</button>
             )}
             {s.status !== 'rejected' && (
-              <button className="btn btn-sm btn-red" disabled={busyId === s.id} onClick={() => decide(s.id, 'rejected')}>Reject</button>
+              <button className="btn btn-sm btn-red" disabled={busyId === s.slug} onClick={() => decide(s.slug, 'rejected')}>Reject</button>
             )}
             {s.status !== 'pending' && (
-              <button className="btn btn-sm btn-gray" disabled={busyId === s.id} onClick={() => decide(s.id, 'pending')}>Set pending</button>
+              <button className="btn btn-sm btn-gray" disabled={busyId === s.slug} onClick={() => decide(s.slug, 'pending')}>Set pending</button>
             )}
-            <button className="btn btn-sm btn-red" style={{ opacity: 0.7 }} disabled={busyId === s.id} onClick={() => decide(s.id, 'delete')}>Delete</button>
+            <button className="btn btn-sm btn-red" style={{ opacity: 0.7 }} disabled={busyId === s.slug} onClick={() => decide(s.slug, 'delete')}>Delete</button>
           </div>
         </td>
       </tr>
       {open && (
         <tr className="detail-row">
           <td colSpan={9}>
-            <div className="detail-grid">
-              <div><h4>About</h4>{s.about || '—'}</div>
-              <div><h4>Skills</h4>
-                {(s.skillGroups || []).map((g, i) => <div key={i}><b>{g.category}:</b> {g.items}</div>)}
-                {!(s.skillGroups || []).length && (s.skills || s.softSkills || '—')}
+            {!d ? (
+              <div style={{ color: '#6b7280' }}>Loading details…</div>
+            ) : (
+              <div className="detail-grid">
+                <div><h4>About</h4>{d.about || '—'}</div>
+                <div><h4>Skills</h4>
+                  {(d.skillGroups || []).map((g, i) => <div key={i}><b>{g.category}:</b> {g.items}</div>)}
+                  {!(d.skillGroups || []).length && (d.skills || d.softSkills || '—')}
+                </div>
+                <div><h4>Address</h4>{d.address || '—'}</div>
+                <div><h4>Education</h4>{(d.education || []).map((e, i) => <div key={i}>{e.degree} — {e.institution} ({e.year}) {e.score}</div>)}{!(d.education || []).length && '—'}</div>
+                <div><h4>Experience</h4>{(d.experience || []).map((e, i) => <div key={i}>{e.role} @ {e.company} ({e.duration})</div>)}{!(d.experience || []).length && '—'}</div>
+                <div><h4>Internships</h4>{(d.internships || []).map((e, i) => <div key={i}>{e.role} @ {e.company} ({e.duration})</div>)}{!(d.internships || []).length && '—'}</div>
+                <div><h4>Projects</h4>{(d.projects || []).map((p, i) => <div key={i}>{p.title} ({p.tech})</div>)}{!(d.projects || []).length && '—'}</div>
+                <div><h4>Links</h4>
+                  {d.linkedin && <div><a href={d.linkedin} target="_blank" rel="noreferrer">LinkedIn</a></div>}
+                  {d.github && <div><a href={d.github} target="_blank" rel="noreferrer">GitHub</a></div>}
+                  {d.website && <div><a href={d.website} target="_blank" rel="noreferrer">Website</a></div>}
+                  {!d.linkedin && !d.github && !d.website && '—'}
+                </div>
               </div>
-              <div><h4>Address</h4>{s.address || '—'}</div>
-              <div><h4>Education</h4>{(s.education || []).map((e, i) => <div key={i}>{e.degree} — {e.institution} ({e.year}) {e.score}</div>)}{!(s.education || []).length && '—'}</div>
-              <div><h4>Experience</h4>{(s.experience || []).map((e, i) => <div key={i}>{e.role} @ {e.company} ({e.duration})</div>)}{!(s.experience || []).length && '—'}</div>
-              <div><h4>Internships</h4>{(s.internships || []).map((e, i) => <div key={i}>{e.role} @ {e.company} ({e.duration})</div>)}{!(s.internships || []).length && '—'}</div>
-              <div><h4>Projects</h4>{(s.projects || []).map((p, i) => <div key={i}>{p.title} ({p.tech})</div>)}{!(s.projects || []).length && '—'}</div>
-              <div><h4>Links</h4>
-                {s.linkedin && <div><a href={s.linkedin} target="_blank" rel="noreferrer">LinkedIn</a></div>}
-                {s.github && <div><a href={s.github} target="_blank" rel="noreferrer">GitHub</a></div>}
-                {s.website && <div><a href={s.website} target="_blank" rel="noreferrer">Website</a></div>}
-                {!s.linkedin && !s.github && !s.website && '—'}
-              </div>
-            </div>
+            )}
           </td>
         </tr>
       )}

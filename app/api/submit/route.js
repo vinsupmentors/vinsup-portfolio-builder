@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
-import { readAll, writeAll, storageReady, slugify } from '../../../lib/store';
+import {
+  storageReady, slugify, studentExists, writeStudent, updateIndex, indexEntry,
+} from '../../../lib/store';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,14 +30,13 @@ export async function POST(req) {
     if (b.photo && String(b.photo).length > 400000) {
       return NextResponse.json({ error: 'Photo is too large. Please choose a smaller image.' }, { status: 400 });
     }
-    const all = await readAll();
-    if (all.some((s) => s.slug === slug)) {
+    if (await studentExists(slug)) {
       return NextResponse.json(
         { error: 'A submission with this roll number already exists. Please contact the academy if this is a mistake.' },
         { status: 409 }
       );
     }
-    const item = {
+    const student = {
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
       slug,
       status: 'pending',
@@ -60,8 +61,21 @@ export async function POST(req) {
       github: b.github || '',
       website: b.website || '',
     };
-    all.push(item);
-    await writeAll(all);
+    try {
+      await writeStudent(student, { overwrite: false });
+    } catch (e) {
+      if (e && e.message && /exist/i.test(e.message)) {
+        return NextResponse.json(
+          { error: 'A submission with this roll number already exists.' },
+          { status: 409 }
+        );
+      }
+      throw e;
+    }
+    await updateIndex((entries) => [
+      ...entries.filter((x) => x.slug !== slug),
+      indexEntry(student),
+    ]);
     return NextResponse.json({ ok: true });
   } catch (e) {
     return NextResponse.json(

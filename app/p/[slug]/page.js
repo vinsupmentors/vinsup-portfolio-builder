@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 import { checkToken } from '../../../lib/auth';
-import { readAll, storageReady } from '../../../lib/store';
+import { readStudent, storageReady } from '../../../lib/store';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,8 +11,7 @@ const LOGO_URL =
 export async function generateMetadata({ params }) {
   try {
     if (!storageReady()) return { title: 'Portfolio — Vinsup Skill Academy' };
-    const all = await readAll();
-    const s = all.find((x) => x.slug === params.slug);
+    const s = await readStudent(params.slug);
     return { title: s ? s.name + ' - Portfolio' : 'Portfolio — Vinsup Skill Academy' };
   } catch {
     return { title: 'Portfolio — Vinsup Skill Academy' };
@@ -36,13 +35,12 @@ export default async function Portfolio({ params }) {
   if (!storageReady()) {
     return <NotLive title="Portfolio not available" msg="Storage is not configured yet." />;
   }
-  let all = [];
+  let s = null;
   try {
-    all = await readAll();
+    s = await readStudent(params.slug);
   } catch {
     return <NotLive title="Portfolio not available" msg="Could not load data. Please try again later." />;
   }
-  const s = all.find((x) => x.slug === params.slug);
   if (!s) {
     return <NotLive title="Portfolio not found" msg="No portfolio exists at this link." />;
   }

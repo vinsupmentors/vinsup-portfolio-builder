@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { checkToken } from '../../../../lib/auth';
-import { readAll, storageReady } from '../../../../lib/store';
+import { readIndex, storageReady } from '../../../../lib/store';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,7 +17,7 @@ export async function GET() {
     });
   }
   try {
-    const all = await readAll();
+    const all = await readIndex();
     all.sort((a, b) => String(b.submittedAt || '').localeCompare(String(a.submittedAt || '')));
     return NextResponse.json({ submissions: all });
   } catch {

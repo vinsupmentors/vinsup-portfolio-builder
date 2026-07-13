@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { checkToken } from '../../../../lib/auth';
-import { readAll, writeAll } from '../../../../lib/store';
+import {
+  readStudent, writeStudent, deleteStudent, updateIndex,
+} from '../../../../lib/store';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,21 +12,32 @@ export async function POST(req) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   try {
-    const { id, action } = await req.json();
-    const all = await readAll();
-    const i = all.findIndex((s) => s.id === id);
-    if (i === -1) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    const { slug, action } = await req.json();
+    if (!slug) return NextResponse.json({ error: 'Missing slug' }, { status: 400 });
+
     if (action === 'delete') {
-      all.splice(i, 1);
-    } else if (['approved', 'rejected', 'pending'].includes(action)) {
-      all[i].status = action;
-      all[i].decidedAt = new Date().toISOString();
-    } else {
+      await deleteStudent(slug);
+      await updateIndex((entries) => entries.filter((x) => x.slug !== slug));
+      return NextResponse.json({ ok: true });
+    }
+
+    if (!['approved', 'rejected', 'pending'].includes(action)) {
       return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }
-    await writeAll(all);
+
+    const student = await readStudent(slug);
+    if (!student) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    student.status = action;
+    student.decidedAt = new Date().toISOString();
+    await writeStudent(student, { overwrite: true });
+    await updateIndex((entries) =>
+      entries.map((x) => (x.slug === slug ? { ...x, status: action } : x))
+    );
     return NextResponse.json({ ok: true });
-  } catch {
-    return NextResponse.json({ error: 'Something went wrong.' }, { status: 500 });
+  } catch (e) {
+    return NextResponse.json(
+      { error: 'Something went wrong: ' + (e && e.message ? e.message : 'unknown error') },
+      { status: 500 }
+    );
   }
 }
